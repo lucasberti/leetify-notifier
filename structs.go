@@ -44,10 +44,15 @@ func (r Response) ExtractSteamIdsFromFriends() map[string]string {
 	return steamIds
 }
 
-func (h Highlights) getHighlightVideoURL() string {
-	original := h.ThumbnailUrl
-	videoURL := strings.Replace(original, "/thumbs/", "/clips/", 1)
-	final := strings.Replace(videoURL, "_thumb.jpg", ".mp4", 1)
+func (r Response) getHighlightsVideoURLs() []string {
+	var videoURLs []string
 
-	return final
+	for _, highlight := range r.Highlights {
+		original := highlight.ThumbnailUrl
+		videoURL := strings.Replace(original, "/thumbs/", "/clips/", 1)
+		final := strings.Replace(videoURL, "_thumb.jpg", ".mp4", 1)
+		videoURLs = append(videoURLs, final)
+	}
+	
+	return videoURLs
 }

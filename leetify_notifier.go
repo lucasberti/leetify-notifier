@@ -32,9 +32,6 @@ func main() {
 	profile := GetProfile(steam64)
 	steamIds := profile.ExtractSteamIdsFromFriends()
 
-	for _, highlight := range profile.Highlights {
-		fmt.Println(highlight.getHighlightVideoURL())
-	}
-
+	fmt.Println(profile.getHighlightsVideoURLs())
 	fmt.Println(steamIds)
 }
