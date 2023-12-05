@@ -52,11 +52,10 @@ func (p Profile) GetFriendsSteamIds() map[string]string {
 func (p Profile) GetHighlightsVideoURLs() []string {
 	var videoURLs []string
 
-	for _, highlight := range p.Highlights {
-		original := highlight.ThumbnailUrl
-		videoURL := strings.Replace(original, "/thumbs/", "/clips/", 1)
-		final := strings.Replace(videoURL, "_thumb.jpg", ".mp4", 1)
-		videoURLs = append(videoURLs, final)
+	for _, h := range p.Highlights {
+		videoURL := strings.Replace(h.ThumbnailUrl, "/thumbs/", "/clips/", 1)
+		videoURL = strings.Replace(videoURL, "_thumb.jpg", ".mp4", 1)
+		videoURLs = append(videoURLs, videoURL)
 	}
 
 	return videoURLs
