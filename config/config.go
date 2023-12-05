@@ -38,7 +38,9 @@ func LoadConfig(path string) (*Config, error) {
 
 	var config Config
 
-	json.Unmarshal(jsonFile, &config)
+	if err := json.Unmarshal(jsonFile, &config); err != nil {
+		return nil, err
+	}
 
 	return &config, nil
 }
