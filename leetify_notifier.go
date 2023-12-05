@@ -22,6 +22,11 @@ func main() {
 		return
 	}
 
+	if config.MainProfile == "" {
+		log.Error().Msg("Please set mainProfile in config.json")
+		return
+	}
+
 	profile, err := GetProfile(config.MainProfile)
 
 	if err != nil {

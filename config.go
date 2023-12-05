@@ -9,6 +9,8 @@ type Config struct {
 	KnownMatchIds		[]string `json:"knownMatchIds"`
 	KnownHighlightIds	[]string `json:"knownHighlightIds"`
 	MainProfile			string   `json:"mainProfile"`
+	TelegramKey 		string   `json:"telegramKey"`
+	TelegramChatId 		int64    `json:"telegramChatId"`
 }
 
 func (config *Config) SaveConfig(path string) error {

@@ -1,12 +1,9 @@
 {
     "knownMatchIds": [
-        "blabla",
-        "blabla2",
-        "blablibli"
     ],
     "knownHighlightIds": [
-        "bimbim",
-        "bambam"
     ],
-    "mainProfile": "76561198040339223"
+    "mainProfile": "76561198040339223",
+    "telegramKey": "blabla",
+    "telegramChatId": 99999999
 }
