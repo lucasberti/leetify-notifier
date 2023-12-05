@@ -40,11 +40,12 @@ func main() {
 	}
 	
 	allFriendsIds := profile.GetFriendsSteamIds()
-	latestGameId := profile.GetLatestGame().GameId
+	latestGame := profile.GetLatestGame()
+	latestGameId := latestGame.GameId
 
 	if slices.Contains(config.KnownMatchIds, latestGameId) {
 		log.Print("Latest game is already known; skipping...")
-		// return
+		return
 	}
 
 	if len(config.KnownMatchIds) == 0 {

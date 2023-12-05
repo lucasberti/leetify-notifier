@@ -26,13 +26,9 @@ func SendTelegramMessage(config *config.Config, message string) {
 		return
 	}
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+	_, err = http.Post(url, "application/json", bytes.NewBuffer(jsonData))
 
 	if err != nil {
 		log.Error().Err(err).Msg("Could not send Telegram message")
 	}
-
-	defer resp.Body.Close()
-
-	log.Print(resp)
 }
