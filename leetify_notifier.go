@@ -6,13 +6,13 @@ import (
 	"net/http"
 )
 
-func GetProfile(steam64Id string) *Profile {
+func GetProfile(steam64Id string) (*Profile, error) {
 	url := "https://api.leetify.com/api/profile/" + steam64Id
 
 	response, err := http.Get(url)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	defer response.Body.Close()
@@ -20,15 +20,20 @@ func GetProfile(steam64Id string) *Profile {
 	var profileResponse Profile
 
 	if err := json.NewDecoder(response.Body).Decode(&profileResponse); err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return &profileResponse
+	return &profileResponse, nil
 }
 
 
 func GetHighlights(steamid string, c chan map[string][]Highlight) {
-	profile := GetProfile(steamid)
+	profile, err := GetProfile(steamid)
+
+	if err != nil {
+		c <- nil
+	}
+
 	idMap := make(map[string][]Highlight)
 
 	if len(profile.Highlights) > 0 {
@@ -45,7 +50,13 @@ func GetHighlights(steamid string, c chan map[string][]Highlight) {
 func main() {
 	steam64 := "76561198040339223"
 
-	profile := GetProfile(steam64)
+	profile, err := GetProfile(steam64)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	
 	allFriends := profile.GetFriendsSteamIds()
 
 	c := make(chan map[string][]Highlight)
