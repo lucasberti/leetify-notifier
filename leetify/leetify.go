@@ -1,4 +1,4 @@
-package main
+package leetify
 
 import (
 	"encoding/json"

@@ -4,6 +4,9 @@ import (
 	"os"
 	"time"
 
+	"leetify_notifier/config"
+	"leetify_notifier/leetify"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -15,7 +18,7 @@ const (
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 
-	config, err := LoadConfig(CONFIG_PATH)
+	config, err := config.LoadConfig(CONFIG_PATH)
 
 	if err != nil {
 		log.Error().Err(err).Msg("Could not load config")
@@ -27,7 +30,7 @@ func main() {
 		return
 	}
 
-	profile, err := GetProfile(config.MainProfile)
+	profile, err := leetify.GetProfile(config.MainProfile)
 
 	if err != nil {
 		log.Error().Err(err).Msg("Could not get main profile")
@@ -36,7 +39,7 @@ func main() {
 	
 	allFriendsIds := profile.GetFriendsSteamIds()
 
-	friendsProfiles := GetFriendsProfiles(allFriendsIds)
+	friendsProfiles := leetify.GetFriendsProfiles(allFriendsIds)
 
 	log.Print(friendsProfiles)
 }
