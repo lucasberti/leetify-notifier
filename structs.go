@@ -2,7 +2,7 @@ package main
 
 import "strings"
 
-type Highlights struct {
+type Highlight struct {
 	Description  string `json:"description"`
 	Id           string `json:"id"`
 	ThumbnailUrl string `json:"thumbnailUrl"`
@@ -13,14 +13,14 @@ type Rank struct {
 	SkillLevel uint16 `json:"skillLevel"`
 }
 
-type Teammates struct {
+type Teammate struct {
 	ProfileUserLeetifyRating float32 `json:"profileUserLeetifyRating"`
 	Rank                     Rank    `json:"rank"`
 	SteamNickname            string  `json:"steamNickname"`
 	Steam64Id                string  `json:"steam64Id"`
 }
 
-type Games struct {
+type Game struct {
 	OwnTeamSteam64Ids []string `json:"ownTeamSteam64Ids"`
 	GameId            string   `json:"gameId"`
 	MapName           string   `json:"mapName"`
@@ -28,31 +28,36 @@ type Games struct {
 	Scores            []int    `json:"scores"`
 }
 
-type Response struct {
-	Highlights []Highlights `json:"highlights"`
-	Teammates  []Teammates  `json:"teammates"`
-	Games      []Games      `json:"games"`
+type Meta struct {
+	Name string `json:"name"`
 }
 
-func (r Response) ExtractSteamIdsFromFriends() map[string]string {
+type Profile struct {
+	Highlights []Highlight `json:"highlights"`
+	Teammates  []Teammate  `json:"teammates"`
+	Games      []Game      `json:"games"`
+	Meta       Meta        `json:"meta"`
+}
+
+func (p Profile) GetFriendsSteamIds() map[string]string {
 	steamIds := make(map[string]string)
 
-	for _, teammate := range r.Teammates {
+	for _, teammate := range p.Teammates {
 		steamIds[teammate.SteamNickname] = teammate.Steam64Id
 	}
 
 	return steamIds
 }
 
-func (r Response) getHighlightsVideoURLs() []string {
+func (p Profile) GetHighlightsVideoURLs() []string {
 	var videoURLs []string
 
-	for _, highlight := range r.Highlights {
+	for _, highlight := range p.Highlights {
 		original := highlight.ThumbnailUrl
 		videoURL := strings.Replace(original, "/thumbs/", "/clips/", 1)
 		final := strings.Replace(videoURL, "_thumb.jpg", ".mp4", 1)
 		videoURLs = append(videoURLs, final)
 	}
-	
+
 	return videoURLs
 }
