@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 )
 
 func GetProfile(steam64Id string) (*Profile, error) {
@@ -27,30 +28,45 @@ func GetProfile(steam64Id string) (*Profile, error) {
 }
 
 
-func GetHighlights(steamid string, c chan map[string][]Highlight) {
-	profile, err := GetProfile(steamid)
+func GetFriendsProfiles(friends map[string]string) []*Profile {
+	c := make(chan *Profile)
 
-	if err != nil {
-		c <- nil
+	var wg sync.WaitGroup
+
+	for _, friend := range friends {
+		wg.Add(1)
+		go func (friend string) {
+			defer wg.Done()
+
+			profile, err := GetProfile(friend)
+
+			if err != nil {
+				fmt.Println("Could not get friend profile: ", friend, err)
+			}
+
+			c <- profile
+		}(friend)
+	}
+	
+	go func () {
+		wg.Wait()
+		close(c)
+	}()
+
+	var profiles []*Profile
+
+	for profile := range c {
+		profiles = append(profiles, profile)
 	}
 
-	idMap := make(map[string][]Highlight)
-
-	if len(profile.Highlights) > 0 {
-		idMap[profile.Meta.Name] = profile.Highlights
-		
-		c <- idMap
-	} else {
-		c <- nil
-	}
-
-	fmt.Println("Got highlights for " + profile.Meta.Name)
+	return profiles
 }
 
-func main() {
-	steam64 := "76561198040339223"
 
-	profile, err := GetProfile(steam64)
+func main() {
+	mainProfile := "76561198040339223"
+
+	profile, err := GetProfile(mainProfile)
 
 	if err != nil {
 		fmt.Println(err)
@@ -59,21 +75,7 @@ func main() {
 	
 	allFriends := profile.GetFriendsSteamIds()
 
-	c := make(chan map[string][]Highlight)
-	defer close(c)
+	friendsProfiles := GetFriendsProfiles(allFriends)
 
-	for _, friend := range allFriends {
-		go GetHighlights(friend, c)
-	}
-
-	for i := 0; i < len(allFriends); i++ {
-		highlights := <-c
-
-		if highlights != nil {
-			fmt.Println(highlights)
-		}
-	}
-
-	// fmt.Println(profile.GetHighlightsVideoURLs())
-	// fmt.Println(allFriends)
+	fmt.Println(friendsProfiles)
 }
