@@ -7,6 +7,7 @@ import (
 
 	"leetify_notifier/config"
 	"leetify_notifier/leetify"
+	"leetify_notifier/notifiers"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -51,6 +52,8 @@ func main() {
 		config.KnownMatchIds = []string{latestGameId}
 		config.SaveConfig(CONFIG_PATH)
 	}
+
+	notifiers.SendTelegramMessage(config, profile.GetLatestGame().GetGameLink())
 
 	friendsProfiles := leetify.GetFriendsProfiles(allFriendsIds)
 
