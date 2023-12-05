@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"slices"
 	"time"
 
 	"leetify_notifier/config"
@@ -38,6 +39,18 @@ func main() {
 	}
 	
 	allFriendsIds := profile.GetFriendsSteamIds()
+	latestGameId := profile.GetLatestGame().GameId
+
+	if slices.Contains(config.KnownMatchIds, latestGameId) {
+		log.Print("Latest game is already known; skipping...")
+		// return
+	}
+
+	if len(config.KnownMatchIds) == 0 {
+		log.Print("No knownMatchIds in config.json, saving latest one...")
+		config.KnownMatchIds = []string{latestGameId}
+		config.SaveConfig(CONFIG_PATH)
+	}
 
 	friendsProfiles := leetify.GetFriendsProfiles(allFriendsIds)
 
