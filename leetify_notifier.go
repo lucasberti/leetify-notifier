@@ -2,9 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"os"
 	"sync"
+	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func GetProfile(steam64Id string) (*Profile, error) {
@@ -24,6 +28,8 @@ func GetProfile(steam64Id string) (*Profile, error) {
 		return nil, err
 	}
 
+	log.Print("Got profile for " + steam64Id + ": " + profileResponse.Meta.Name)
+
 	return &profileResponse, nil
 }
 
@@ -41,7 +47,7 @@ func GetFriendsProfiles(friends map[string]string) []*Profile {
 			profile, err := GetProfile(friend)
 
 			if err != nil {
-				fmt.Println("Could not get friend profile: ", friend, err)
+				log.Error().Err(err).Msgf("Could not get friend profile: %s", friend)
 			}
 
 			c <- profile
@@ -64,12 +70,13 @@ func GetFriendsProfiles(friends map[string]string) []*Profile {
 
 
 func main() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 	mainProfile := "76561198040339223"
 
 	profile, err := GetProfile(mainProfile)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err).Msg("Could not get main profile")
 		return
 	}
 	
@@ -77,5 +84,5 @@ func main() {
 
 	friendsProfiles := GetFriendsProfiles(allFriends)
 
-	fmt.Println(friendsProfiles)
+	log.Print(friendsProfiles)
 }
