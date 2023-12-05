@@ -39,6 +39,14 @@ type Profile struct {
 	Meta       Meta        `json:"meta"`
 }
 
+func (g Game) GetGameLink() string {
+	return "https://leetify.com/app/match-details/" + g.GameId
+}
+
+func (p Profile) GetLatestGame() *Game {
+	return &p.Games[0]
+}
+
 func (p Profile) GetFriendsSteamIds() map[string]string {
 	steamIds := make(map[string]string)
 
