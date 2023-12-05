@@ -11,6 +11,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	config_path = "config.json"
+)
+
 func GetProfile(steam64Id string) (*Profile, error) {
 	url := "https://api.leetify.com/api/profile/" + steam64Id
 
@@ -71,18 +75,24 @@ func GetFriendsProfiles(friends map[string]string) []*Profile {
 
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
-	mainProfile := "76561198040339223"
 
-	profile, err := GetProfile(mainProfile)
+	config, err := LoadConfig(config_path)
+
+	if err != nil {
+		log.Error().Err(err).Msg("Could not load config")
+		return
+	}
+
+	profile, err := GetProfile(config.MainProfile)
 
 	if err != nil {
 		log.Error().Err(err).Msg("Could not get main profile")
 		return
 	}
 	
-	allFriends := profile.GetFriendsSteamIds()
+	allFriendsIds := profile.GetFriendsSteamIds()
 
-	friendsProfiles := GetFriendsProfiles(allFriends)
+	friendsProfiles := GetFriendsProfiles(allFriendsIds)
 
 	log.Print(friendsProfiles)
 }
