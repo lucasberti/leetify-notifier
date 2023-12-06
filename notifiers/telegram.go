@@ -3,8 +3,9 @@ package notifiers
 import (
 	"bytes"
 	"encoding/json"
-	"leetify_notifier/config"
 	"net/http"
+
+	"github.com/lucasberti/leetify-notifier/config"
 
 	"github.com/rs/zerolog/log"
 )

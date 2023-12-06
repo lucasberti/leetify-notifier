@@ -1,4 +1,4 @@
-module leetify_notifier
+module github.com/lucasberti/leetify-notifier
 
 go 1.20
 

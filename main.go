@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	"leetify_notifier/config"
-	"leetify_notifier/leetify"
+	"github.com/lucasberti/leetify-notifier/config"
+	"github.com/lucasberti/leetify-notifier/leetify"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

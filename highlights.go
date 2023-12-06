@@ -1,11 +1,12 @@
 package main
 
 import (
-	"leetify_notifier/config"
-	"leetify_notifier/leetify"
-	"leetify_notifier/notifiers"
 	"slices"
 	"sync"
+
+	"github.com/lucasberti/leetify-notifier/config"
+	"github.com/lucasberti/leetify-notifier/leetify"
+	"github.com/lucasberti/leetify-notifier/notifiers"
 
 	"github.com/rs/zerolog/log"
 )

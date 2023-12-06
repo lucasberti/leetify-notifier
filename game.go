@@ -2,13 +2,14 @@ package main
 
 import (
 	"bytes"
-	"leetify_notifier/config"
-	"leetify_notifier/leetify"
-	"leetify_notifier/notifiers"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/lucasberti/leetify-notifier/config"
+	"github.com/lucasberti/leetify-notifier/leetify"
+	"github.com/lucasberti/leetify-notifier/notifiers"
 
 	"github.com/rs/zerolog/log"
 )
