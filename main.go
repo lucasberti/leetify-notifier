@@ -33,14 +33,14 @@ func replaceValues(input string, mapName string, score string, link string) stri
 	return input
 }
 
-func generateGameMessage(profile *leetify.Profile, config *config.Config) string {
+func generateGameMessage(cfg *config.Config, profile *leetify.Profile) string {
 	game := profile.GetLatestGame()
 	friends := profile.Teammates
 
 	var message bytes.Buffer
 
 	for _, player := range game.OwnTeamSteam64Ids {
-		if mention, ok := config.TelegramUserNames[player]; ok {
+		if mention, ok := cfg.TelegramUserNames[player]; ok {
 			message.WriteString(mention + " ")
 
 			for _, teammate := range friends {
@@ -64,13 +64,13 @@ func generateGameMessage(profile *leetify.Profile, config *config.Config) string
 
 	switch game.MatchResult {
 	case "win":
-		message.WriteString(replaceValues(config.WinMsg, mapName, score, gameLink))
+		message.WriteString(replaceValues(cfg.WinMsg, mapName, score, gameLink))
 	
 	case "loss":
-		message.WriteString(replaceValues(config.LossMsg, mapName, score, gameLink))
+		message.WriteString(replaceValues(cfg.LossMsg, mapName, score, gameLink))
 
 	case "tie":
-		message.WriteString(replaceValues(config.TieMsg, mapName, score, gameLink))
+		message.WriteString(replaceValues(cfg.TieMsg, mapName, score, gameLink))
 
 	default:
 		message.WriteString("New match found!\n" + gameLink)
@@ -79,76 +79,56 @@ func generateGameMessage(profile *leetify.Profile, config *config.Config) string
 	return message.String()
 }
 
-func checkGames(config *config.Config, profile *leetify.Profile, wg *sync.WaitGroup) {
+func checkGames(cfg *config.Config, profile *leetify.Profile, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	latestGame := profile.GetLatestGame()
-	latestGameId := latestGame.GameId
+	log.Print("Checking games...")
+	defer log.Print("Finished checking games")
 
-	if slices.Contains(config.KnownMatchIds, latestGameId) {
-		log.Print("Latest game is already known; skipping...")
+	latestGame := profile.GetLatestGame()
+
+	if slices.Contains(cfg.KnownMatchIds, latestGame.GameId) {
 		return
 	}
 
-	if len(config.KnownMatchIds) == 0 {
-		log.Print("No knownMatchIds in config.json, saving latest one...")
-		config.KnownMatchIds = []string{latestGameId}
-	} else {
-		if !slices.Contains(config.KnownMatchIds, latestGameId) && latestGameId != "" {
-			config.KnownMatchIds = append(config.KnownMatchIds, latestGameId)
-		}
+	if latestGame.GameId != "" {
+		cfg.KnownMatchIds = append(cfg.KnownMatchIds, latestGame.GameId)
 	}
 
-	config.SaveConfig(CONFIG_PATH)
+	cfg.SaveConfig(CONFIG_PATH)
 
-	notifiers.SendTelegramMessage(config, generateGameMessage(profile, config))
+	notifiers.SendTelegramMessage(cfg, generateGameMessage(cfg, profile))
 }
 
-func checkHighlights(config *config.Config, profile *leetify.Profile, wg *sync.WaitGroup) {
+func checkHighlights(cfg *config.Config, profile *leetify.Profile, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	allFriendsIds := profile.GetFriendsSteamIds()
+	log.Print("Checking highlights...")
+	defer log.Print("Finished checking highlights")
 
-	friendsProfiles := leetify.GetFriendsProfiles(allFriendsIds)
+	allFriendsIDs := profile.GetFriendsSteamIds()
+	friendsProfiles := leetify.GetFriendsProfiles(allFriendsIDs)
 
-	highlights := make([]leetify.Highlight, len(friendsProfiles) + 1)
-	highlights = append(highlights, profile.Highlights...)
+	highlights := append([]leetify.Highlight{}, profile.Highlights...)
 
 	for _, friendProfile := range friendsProfiles {
-		if len(friendProfile.Highlights) == 0 {
-			continue
-		}
-
 		highlights = append(highlights, friendProfile.Highlights...)
 	}
 
 	for _, highlight := range highlights {
-		if highlight.Id == "" {
+		if highlight.Id == "" || slices.Contains(cfg.KnownHighlightIds, highlight.Id){
 			continue
 		}
 
-		if slices.Contains(config.KnownHighlightIds, highlight.Id) {
-			log.Print("Highlight is already known; skipping...")
-			continue
-		}
+		cfg.KnownHighlightIds = append(cfg.KnownHighlightIds, highlight.Id)
+		cfg.SaveConfig(CONFIG_PATH)
 
-		if len(config.KnownHighlightIds) == 0 {
-			log.Print("No knownHighlightIds in config.json, saving latest one...")
-			config.KnownHighlightIds = []string{highlight.Id}
-		} else {
-			if !slices.Contains(config.KnownHighlightIds, highlight.Id) {
-				config.KnownHighlightIds = append(config.KnownHighlightIds, highlight.Id)
-			}
-		}
-		
-		config.SaveConfig(CONFIG_PATH)
-
-		notifiers.SendTelegramMessage(config, "NEW HIGHLIGHT: " + highlight.Description)
+		notifiers.SendTelegramMessage(cfg, "NEW HIGHLIGHT: " + highlight.Description)
 	}
 
 }
 
-func run(ctx context.Context, config *config.Config, profile *leetify.Profile) {
+func run(ctx context.Context, cfg *config.Config) {
 	ticker := time.NewTicker(UPDATE_INTERVAL)
 
 	for {
@@ -156,11 +136,18 @@ func run(ctx context.Context, config *config.Config, profile *leetify.Profile) {
 		case <-ticker.C:
 			log.Print("Checking for updates...")
 
+			profile, err := leetify.GetProfile(cfg.MainProfile)
+
+			if err != nil {
+				log.Error().Err(err).Msg("Could not get main profile")
+				return
+			}
+
 			var wg sync.WaitGroup
 			wg.Add(2)
 
-			go checkGames(config, profile, &wg)
-			go checkHighlights(config, profile, &wg)
+			go checkGames(cfg, profile, &wg)
+			go checkHighlights(cfg, profile, &wg)
 		
 			wg.Wait()
 
@@ -175,26 +162,19 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 	ctx, cancel := context.WithCancel(context.Background())
 
-	config, err := config.LoadConfig(CONFIG_PATH)
+	cfg, err := config.LoadConfig(CONFIG_PATH)
 
 	if err != nil {
 		log.Error().Err(err).Msg("Could not load config")
 		return
 	}
 
-	if config.MainProfile == "" {
+	if cfg.MainProfile == "" {
 		log.Error().Msg("Please set mainProfile in config.json")
 		return
 	}
 
-	profile, err := leetify.GetProfile(config.MainProfile)
-
-	if err != nil {
-		log.Error().Err(err).Msg("Could not get main profile")
-		return
-	}
-
-	run(ctx, config, profile)
+	run(ctx, cfg)
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)

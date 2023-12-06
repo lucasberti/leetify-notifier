@@ -9,13 +9,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func SendTelegramMessage(config *config.Config, message string) {
+func SendTelegramMessage(cfg *config.Config, message string) {
 	log.Print("Sending Telegram message: " + message)
 
-	url := "https://api.telegram.org/bot" + config.TelegramKey + "/sendMessage"
+	url := "https://api.telegram.org/bot" + cfg.TelegramKey + "/sendMessage"
 
-	data := map[string]any{
-		"chat_id":    config.TelegramChatId,
+	data := map[string]interface{}{
+		"chat_id":    cfg.TelegramChatId,
 		"text":       message,
 	}
 

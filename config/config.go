@@ -19,10 +19,10 @@ type Config struct {
 	TieMsg            string            `json:"tieMsg"`
 }
 
-func (config *Config) SaveConfig(path string) error {
+func (c *Config) SaveConfig(path string) error {
 	log.Print("Saving config...")
 
-	jsonFile, err := json.MarshalIndent(config, "", "    ")
+	jsonFile, err := json.MarshalIndent(c, "", "    ")
 
 	if err != nil {
 		return err
