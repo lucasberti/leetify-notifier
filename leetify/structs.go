@@ -6,6 +6,7 @@ type Highlight struct {
 	Description  string `json:"description"`
 	Id           string `json:"id"`
 	ThumbnailUrl string `json:"thumbnailUrl"`
+	Steam64Id	 string `json:"steam64Id"`
 }
 
 type Rank struct {
@@ -60,14 +61,9 @@ func (p Profile) GetFriendsSteamIds() map[string]string {
 	return steamIds
 }
 
-func (p Profile) GetHighlightsVideoURLs() []string {
-	var videoURLs []string
+func (h Highlight) GetVideoURL() string {
+	videoURL := strings.Replace(h.ThumbnailUrl, "/thumbs/", "/clips/", 1)
+	videoURL = strings.Replace(videoURL, "_thumb.jpg", ".mp4", 1)
 
-	for _, h := range p.Highlights {
-		videoURL := strings.Replace(h.ThumbnailUrl, "/thumbs/", "/clips/", 1)
-		videoURL = strings.Replace(videoURL, "_thumb.jpg", ".mp4", 1)
-		videoURLs = append(videoURLs, videoURL)
-	}
-
-	return videoURLs
+	return videoURL
 }

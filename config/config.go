@@ -17,6 +17,7 @@ type Config struct {
 	WinMsg            string            `json:"winMsg"`
 	LossMsg           string            `json:"lossMsg"`
 	TieMsg            string            `json:"tieMsg"`
+	HighlightMsg      string            `json:"highlightMsg"`
 }
 
 func (c *Config) SaveConfig(path string) error {

@@ -13,5 +13,6 @@
     },
     "winMsg": "Congrats! You won (%SCORE%) a match on %MAPNAME%!\nHere are your stats: %GAMELINK%",
     "lossMsg": "Oh no, you lost (%SCORE%) a match on %MAPNAME%!\nHere are your stats: %GAMELINK%",
-    "tieMsg": "Welp, that's something. You tied (%SCORE%) a match on %MAPNAME%.\nHere are your stats: %GAMELINK%"
+    "tieMsg": "Welp, that's something. You tied (%SCORE%) a match on %MAPNAME%.\nHere are your stats: %GAMELINK%",
+    "highlightMsg": "What a play, %PLAYER%! Here's the highlight of your %DESCRIPTION%\n%HIGHLIGHTLINK%"
 }

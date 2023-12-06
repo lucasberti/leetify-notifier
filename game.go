@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func replaceValues(input string, mapName string, score string, link string) string {
+func replaceGameValues(input string, mapName string, score string, link string) string {
 	input = strings.Replace(input, "%MAPNAME%", mapName, -1)
 	input = strings.Replace(input, "%SCORE%", score, -1)
 	input = strings.Replace(input, "%GAMELINK%", link, -1)
@@ -53,13 +53,13 @@ func generateGameMessage(cfg *config.Config, profile *leetify.Profile) string {
 
 	switch game.MatchResult {
 	case "win":
-		message.WriteString(replaceValues(cfg.WinMsg, mapName, score, gameLink))
+		message.WriteString(replaceGameValues(cfg.WinMsg, mapName, score, gameLink))
 
 	case "loss":
-		message.WriteString(replaceValues(cfg.LossMsg, mapName, score, gameLink))
+		message.WriteString(replaceGameValues(cfg.LossMsg, mapName, score, gameLink))
 
 	case "tie":
-		message.WriteString(replaceValues(cfg.TieMsg, mapName, score, gameLink))
+		message.WriteString(replaceGameValues(cfg.TieMsg, mapName, score, gameLink))
 
 	default:
 		message.WriteString("New match found!\n" + gameLink)
