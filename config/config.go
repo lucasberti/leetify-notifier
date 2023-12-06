@@ -8,11 +8,15 @@ import (
 )
 
 type Config struct {
-	KnownMatchIds		[]string `json:"knownMatchIds"`
-	KnownHighlightIds	[]string `json:"knownHighlightIds"`
-	MainProfile			string   `json:"mainProfile"`
-	TelegramKey 		string   `json:"telegramKey"`
-	TelegramChatId 		int64    `json:"telegramChatId"`
+	KnownMatchIds     []string          `json:"knownMatchIds"`
+	KnownHighlightIds []string          `json:"knownHighlightIds"`
+	MainProfile       string            `json:"mainProfile"`
+	TelegramKey       string            `json:"telegramKey"`
+	TelegramChatId    int64             `json:"telegramChatId"`
+	TelegramUserNames map[string]string `json:"telegramUserNames"`
+	WinMsg            string            `json:"winMsg"`
+	LossMsg           string            `json:"lossMsg"`
+	TieMsg            string            `json:"tieMsg"`
 }
 
 func (config *Config) SaveConfig(path string) error {

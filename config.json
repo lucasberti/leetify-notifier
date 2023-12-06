@@ -3,7 +3,15 @@
     ],
     "knownHighlightIds": [
     ],
-    "mainProfile": "76561198040339223",
-    "telegramKey": "blabla",
-    "telegramChatId": 99999999
+    "mainProfile": "YOUR_STEAMID_64",
+    "telegramKey": "YOUR_TELEGRAM_KEY",
+    "telegramChatId": 99999999,
+    "telegramUserNames": {
+        "YOUR_STEAMID_64": "YOUR_TELEGRAM_USERNAME",
+        "FRIEND1_STEAMID_64": "FRIEND1_TELEGRAM_USERNAME",
+        "FRIEND2_STEAMID_64": "FRIEND2_TELEGRAM_USERNAME"
+    },
+    "winMsg": "Congrats! You won (%SCORE%) a match on %MAPNAME%!\nHere are your stats: %GAMELINK%",
+    "lossMsg": "Oh no, you lost (%SCORE%) a match on %MAPNAME%!\nHere are your stats: %GAMELINK%",
+    "tieMsg": "Welp, that's something. You tied (%SCORE%) a match on %MAPNAME%.\nHere are your stats: %GAMELINK%"
 }

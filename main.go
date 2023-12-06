@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"os/signal"
 	"slices"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -21,6 +24,60 @@ const (
 	CONFIG_PATH = "config.json"
 	UPDATE_INTERVAL = 30 * time.Second
 )
+
+func replaceValues(input string, mapName string, score string, link string) string {
+	input = strings.Replace(input, "%MAPNAME%", mapName, -1)
+	input = strings.Replace(input, "%SCORE%", score, -1)
+	input = strings.Replace(input, "%GAMELINK%", link, -1)
+
+	return input
+}
+
+func generateGameMessage(profile *leetify.Profile, config *config.Config) string {
+	game := profile.GetLatestGame()
+	friends := profile.Teammates
+
+	var message bytes.Buffer
+
+	for _, player := range game.OwnTeamSteam64Ids {
+		if mention, ok := config.TelegramUserNames[player]; ok {
+			message.WriteString(mention + " ")
+
+			for _, teammate := range friends {
+				if teammate.Steam64Id == player {
+					rank := strconv.FormatUint(uint64(teammate.Rank.SkillLevel), 10)
+					message.WriteString(" (rank " + rank + ")")
+				}
+			}
+
+			if player == profile.Meta.Steam64Id {
+				rank := strconv.FormatUint(uint64(game.SkillLevel), 10)
+				message.WriteString(" (rank " + rank + ")")
+			}
+			message.WriteString("\n")
+		}
+	}
+
+	score := strconv.Itoa(game.Scores[0]) + " - " + strconv.Itoa(game.Scores[1])
+	mapName := game.MapName
+	gameLink := game.GetGameLink()
+
+	switch game.MatchResult {
+	case "win":
+		message.WriteString(replaceValues(config.WinMsg, mapName, score, gameLink))
+	
+	case "loss":
+		message.WriteString(replaceValues(config.LossMsg, mapName, score, gameLink))
+
+	case "tie":
+		message.WriteString(replaceValues(config.TieMsg, mapName, score, gameLink))
+
+	default:
+		message.WriteString("New match found!\n" + gameLink)
+	}
+
+	return message.String()
+}
 
 func checkGames(config *config.Config, profile *leetify.Profile, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -44,7 +101,7 @@ func checkGames(config *config.Config, profile *leetify.Profile, wg *sync.WaitGr
 
 	config.SaveConfig(CONFIG_PATH)
 
-	notifiers.SendTelegramMessage(config, profile.GetLatestGame().GetGameLink())	
+	notifiers.SendTelegramMessage(config, generateGameMessage(profile, config))
 }
 
 func checkHighlights(config *config.Config, profile *leetify.Profile, wg *sync.WaitGroup) {
@@ -54,14 +111,22 @@ func checkHighlights(config *config.Config, profile *leetify.Profile, wg *sync.W
 
 	friendsProfiles := leetify.GetFriendsProfiles(allFriendsIds)
 
-	highlights := make([]leetify.Highlight, len(friendsProfiles))
+	highlights := make([]leetify.Highlight, len(friendsProfiles) + 1)
 	highlights = append(highlights, profile.Highlights...)
 
 	for _, friendProfile := range friendsProfiles {
+		if len(friendProfile.Highlights) == 0 {
+			continue
+		}
+
 		highlights = append(highlights, friendProfile.Highlights...)
 	}
 
 	for _, highlight := range highlights {
+		if highlight.Id == "" {
+			continue
+		}
+
 		if slices.Contains(config.KnownHighlightIds, highlight.Id) {
 			log.Print("Highlight is already known; skipping...")
 			continue
@@ -71,7 +136,7 @@ func checkHighlights(config *config.Config, profile *leetify.Profile, wg *sync.W
 			log.Print("No knownHighlightIds in config.json, saving latest one...")
 			config.KnownHighlightIds = []string{highlight.Id}
 		} else {
-			if !slices.Contains(config.KnownHighlightIds, highlight.Id) && highlight.Id != "" {
+			if !slices.Contains(config.KnownHighlightIds, highlight.Id) {
 				config.KnownHighlightIds = append(config.KnownHighlightIds, highlight.Id)
 			}
 		}

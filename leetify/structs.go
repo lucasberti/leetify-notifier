@@ -26,10 +26,13 @@ type Game struct {
 	MapName           string   `json:"mapName"`
 	MatchResult       string   `json:"matchResult"`
 	Scores            []int    `json:"scores"`
+	SkillLevel        uint16   `json:"skillLevel"`
+	GameFinishedAt	  string   `json:"gameFinishedAt"`
 }
 
 type Meta struct {
-	Name string `json:"name"`
+	Name 		string `json:"name"`
+	Steam64Id 	string `json:"steam64Id"`
 }
 
 type Profile struct {
