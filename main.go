@@ -19,6 +19,7 @@ import (
 
 const (
 	CONFIG_PATH = "config.json"
+	UPDATE_INTERVAL = 30 * time.Second
 )
 
 func checkGames(config *config.Config, profile *leetify.Profile, wg *sync.WaitGroup) {
@@ -51,29 +52,35 @@ func checkHighlights(config *config.Config, profile *leetify.Profile, wg *sync.W
 
 	friendsProfiles := leetify.GetFriendsProfiles(allFriendsIds)
 
+	highlights := make([]leetify.Highlight, len(friendsProfiles))
+	highlights = append(highlights, profile.Highlights...)
+
 	for _, friendProfile := range friendsProfiles {
-		for _, highlight := range friendProfile.Highlights {
-			if slices.Contains(config.KnownHighlightIds, highlight.Id) {
-				log.Print("Highlight is already known; skipping...")
-				return
-			}
-
-			if len(config.KnownHighlightIds) == 0 {
-				log.Print("No knownHighlightIds in config.json, saving latest one...")
-				config.KnownHighlightIds = []string{highlight.Id}
-			} else {
-				config.KnownHighlightIds = append(config.KnownHighlightIds, highlight.Id)
-			}
-			
-			config.SaveConfig(CONFIG_PATH)
-
-			notifiers.SendTelegramMessage(config, "NEW HIGHLIGHT: " + highlight.Description)
-		}
+		highlights = append(highlights, friendProfile.Highlights...)
 	}
+
+	for _, highlight := range highlights {
+		if slices.Contains(config.KnownHighlightIds, highlight.Id) {
+			log.Print("Highlight is already known; skipping...")
+			continue
+		}
+
+		if len(config.KnownHighlightIds) == 0 {
+			log.Print("No knownHighlightIds in config.json, saving latest one...")
+			config.KnownHighlightIds = []string{highlight.Id}
+		} else {
+			config.KnownHighlightIds = append(config.KnownHighlightIds, highlight.Id)
+		}
+		
+		config.SaveConfig(CONFIG_PATH)
+
+		notifiers.SendTelegramMessage(config, "NEW HIGHLIGHT: " + highlight.Description)
+	}
+
 }
 
 func run(ctx context.Context, config *config.Config, profile *leetify.Profile) {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(UPDATE_INTERVAL)
 
 	for {
 		select {
@@ -82,7 +89,7 @@ func run(ctx context.Context, config *config.Config, profile *leetify.Profile) {
 
 			var wg sync.WaitGroup
 			wg.Add(2)
-			
+
 			go checkGames(config, profile, &wg)
 			go checkHighlights(config, profile, &wg)
 		
