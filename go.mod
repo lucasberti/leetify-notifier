@@ -1,6 +1,6 @@
 module github.com/lucasberti/leetify-notifier
 
-go 1.20
+go 1.21
 
 require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
