@@ -37,7 +37,9 @@ func checkGames(config *config.Config, profile *leetify.Profile, wg *sync.WaitGr
 		log.Print("No knownMatchIds in config.json, saving latest one...")
 		config.KnownMatchIds = []string{latestGameId}
 	} else {
-		config.KnownMatchIds = append(config.KnownMatchIds, latestGameId)
+		if !slices.Contains(config.KnownMatchIds, latestGameId) && latestGameId != "" {
+			config.KnownMatchIds = append(config.KnownMatchIds, latestGameId)
+		}
 	}
 
 	config.SaveConfig(CONFIG_PATH)
@@ -69,7 +71,9 @@ func checkHighlights(config *config.Config, profile *leetify.Profile, wg *sync.W
 			log.Print("No knownHighlightIds in config.json, saving latest one...")
 			config.KnownHighlightIds = []string{highlight.Id}
 		} else {
-			config.KnownHighlightIds = append(config.KnownHighlightIds, highlight.Id)
+			if !slices.Contains(config.KnownHighlightIds, highlight.Id) && highlight.Id != "" {
+				config.KnownHighlightIds = append(config.KnownHighlightIds, highlight.Id)
+			}
 		}
 		
 		config.SaveConfig(CONFIG_PATH)
