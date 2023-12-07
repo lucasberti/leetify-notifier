@@ -33,7 +33,7 @@ func run(ctx context.Context, cfg *config.Config) {
 
 			if err != nil {
 				log.Error().Err(err).Msg("Could not get main profile")
-				return
+				continue
 			}
 
 			var wg sync.WaitGroup
