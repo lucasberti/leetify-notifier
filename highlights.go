@@ -46,7 +46,9 @@ func checkHighlights(cfg *config.Config, profile *leetify.Profile, wg *sync.Wait
 	highlights := append([]leetify.Highlight{}, profile.Highlights...)
 
 	for _, friendProfile := range friendsProfiles {
-		highlights = append(highlights, friendProfile.Highlights...)
+		if friendProfile != nil {
+			highlights = append(highlights, friendProfile.Highlights...)
+		}
 	}
 
 	for _, highlight := range highlights {
