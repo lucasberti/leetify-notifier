@@ -25,24 +25,26 @@ func run(ctx context.Context, cfg *config.Config) {
 	ticker := time.NewTicker(UPDATE_INTERVAL)
 
 	for {
+		log.Print("Checking for updates...")
+
+		profile, err := leetify.GetProfile(cfg.MainProfile)
+
+		if err != nil {
+			log.Error().Err(err).Msg("Could not get main profile")
+			continue
+		}
+
+		var wg sync.WaitGroup
+		wg.Add(2)
+
+		go checkGames(cfg, profile, &wg)
+		go checkHighlights(cfg, profile, &wg)
+	
+		wg.Wait()
+
 		select {
 		case <-ticker.C:
-			log.Print("Checking for updates...")
-
-			profile, err := leetify.GetProfile(cfg.MainProfile)
-
-			if err != nil {
-				log.Error().Err(err).Msg("Could not get main profile")
-				continue
-			}
-
-			var wg sync.WaitGroup
-			wg.Add(2)
-
-			go checkGames(cfg, profile, &wg)
-			go checkHighlights(cfg, profile, &wg)
-		
-			wg.Wait()
+			continue
 
 		case <-ctx.Done():
 			ticker.Stop()
