@@ -19,7 +19,11 @@ func replaceHighlightValues(input, player, description, link string, skipLink bo
 
 	if !skipLink {
 		input = strings.Replace(input, "%HIGHLIGHTLINK%", link, -1)
+	} else {
+		input = strings.Replace(input, "%HIGHLIGHTLINK%", "", -1)
 	}
+
+	input = strings.Trim(input, "\n")
 
 	return input
 }
@@ -68,19 +72,19 @@ func checkHighlights(cfg *config.Config, profile *leetify.Profile, wg *sync.Wait
 			continue
 		}
 
-		if fileSize > 50000000 {
-			go notifiers.SendTelegramMessage(cfg, generateHighlightMessage(cfg, &highlight, false))
-		} else {
+		if fileSize <= notifiers.MAX_FILE_SIZE {
 			go func () {
-				hBytes, err := highlight.DownloadHighlight()
+				videoBody, err := highlight.DownloadHighlight()
 
 				if err != nil {
 					log.Error().Err(err).Msg("Could not download highlight")
 					return
 				}
 	
-				notifiers.SendTelegramVideo(cfg, hBytes, generateHighlightMessage(cfg, &highlight, true))
+				notifiers.SendTelegramVideo(cfg, videoBody, fileSize, generateHighlightMessage(cfg, &highlight, true))
 			}()
+		} else {
+			go notifiers.SendTelegramMessage(cfg, generateHighlightMessage(cfg, &highlight, false))
 		}	
 
 		cfg.KnownHighlightIds = append(cfg.KnownHighlightIds, highlight.Id)

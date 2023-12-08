@@ -48,15 +48,15 @@ type Profile struct {
 	Meta       Meta        `json:"meta"`
 }
 
-func (g Game) GetGameLink() string {
+func (g *Game) GetGameLink() string {
 	return "https://leetify.com/app/match-details/" + g.GameId
 }
 
-func (p Profile) GetLatestGame() *Game {
+func (p *Profile) GetLatestGame() *Game {
 	return &p.Games[0]
 }
 
-func (p Profile) GetFriendsSteamIds() map[string]string {
+func (p *Profile) GetFriendsSteamIds() map[string]string {
 	steamIds := make(map[string]string)
 
 	for _, teammate := range p.Teammates {
@@ -66,32 +66,30 @@ func (p Profile) GetFriendsSteamIds() map[string]string {
 	return steamIds
 }
 
-func (h Highlight) GetVideoURL() string {
+func (h *Highlight) GetVideoURL() string {
 	videoURL := strings.Replace(h.ThumbnailUrl, "/thumbs/", "/clips/", 1)
 	videoURL = strings.Replace(videoURL, "_thumb.jpg", ".mp4", 1)
 
 	return videoURL
 }
 
-func (h Highlight) GetVideoSize() uint32 {
+func (h *Highlight) GetVideoSize() int64 {
 	resp, err := http.Head(h.GetVideoURL())
 
 	if err != nil {
 		return 0
 	}
 
-	u64, err := strconv.ParseUint(resp.Header.Get("Content-Length"), 10, 64)
+	size, err := strconv.Atoi(resp.Header.Get("Content-Length"))
 
 	if err != nil {
 		return 0
 	}
 
-	u32 := uint32(u64)
-
-	return u32
+	return int64(size)
 }
 
-func (h Highlight) DownloadHighlight() ([]byte, error) {
+func (h *Highlight) DownloadHighlight() (io.ReadCloser, error) {
 	url := h.GetVideoURL()
 
 	video, err := http.Get(url)
@@ -100,12 +98,5 @@ func (h Highlight) DownloadHighlight() ([]byte, error) {
 		return nil, err
 	}
 
-	defer video.Body.Close()
-
-	// Reading the whole file into memory isn't a good idea but 
-	// it's not that big of a deal since there's not that many new highlights
-	// at the same time
-	videoData, _ := io.ReadAll(video.Body)
-
-	return videoData, nil
+	return video.Body, nil
 }

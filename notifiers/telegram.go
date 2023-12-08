@@ -3,6 +3,8 @@ package notifiers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -10,6 +12,10 @@ import (
 	"github.com/technoweenie/multipartstreamer"
 
 	"github.com/rs/zerolog/log"
+)
+
+const (
+	MAX_FILE_SIZE = 5 * 1024 * 1024
 )
 
 func SendTelegramMessage(cfg *config.Config, message string) error {
@@ -39,8 +45,13 @@ func SendTelegramMessage(cfg *config.Config, message string) error {
 	return nil
 }
 
-func SendTelegramVideo(cfg *config.Config, video []byte, caption string) error {
+func SendTelegramVideo(cfg *config.Config, video io.ReadCloser, size int64, caption string) error {
+	defer video.Close()
 	log.Print("Sending Telegram video")
+
+	if size > MAX_FILE_SIZE {
+		return errors.New("Telegram video size too big")
+	}
 
 	url := "https://api.telegram.org/bot" + cfg.TelegramKey + "/sendVideo"
 
@@ -52,9 +63,8 @@ func SendTelegramVideo(cfg *config.Config, video []byte, caption string) error {
 	}
 
 	ms.WriteFields(data)
-	
-	buf := bytes.NewBuffer(video)
-	ms.WriteReader("video", "highlight.mp4", int64(len(video)), buf)
+
+	ms.WriteReader("video", "highlight.mp4", size, video)
 
 	log.Print(data)
 
