@@ -13,15 +13,18 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func replaceHighlightValues(input string, player string, description string, link string) string {
+func replaceHighlightValues(input, player, description, link string, skipLink bool) string {
 	input = strings.Replace(input, "%PLAYER%", player, -1)
 	input = strings.Replace(input, "%DESCRIPTION%", description, -1)
-	input = strings.Replace(input, "%HIGHLIGHTLINK%", link, -1)
+
+	if !skipLink {
+		input = strings.Replace(input, "%HIGHLIGHTLINK%", link, -1)
+	}
 
 	return input
 }
 
-func generateHighlightMessage(cfg *config.Config, highlight *leetify.Highlight) string {
+func generateHighlightMessage(cfg *config.Config, highlight *leetify.Highlight, skipLink bool) string {
 	var message bytes.Buffer
 
 	playerName := ""
@@ -29,7 +32,7 @@ func generateHighlightMessage(cfg *config.Config, highlight *leetify.Highlight) 
 		playerName = mention
 	}
 
-	message.WriteString(replaceHighlightValues(cfg.HighlightMsg, playerName, highlight.Description, highlight.GetVideoURL()))
+	message.WriteString(replaceHighlightValues(cfg.HighlightMsg, playerName, highlight.Description, highlight.GetVideoURL(), skipLink))
 
 	return message.String()
 }
@@ -56,10 +59,32 @@ func checkHighlights(cfg *config.Config, profile *leetify.Profile, wg *sync.Wait
 			continue
 		}
 
+		log.Print("Downloading highlight: " + highlight.GetVideoURL())
+
+		fileSize := highlight.GetVideoSize()
+
+		if fileSize == 0 {
+			log.Error().Msg("Could not get highlight file size")
+			continue
+		}
+
+		if fileSize > 50000000 {
+			go notifiers.SendTelegramMessage(cfg, generateHighlightMessage(cfg, &highlight, false))
+		} else {
+			go func () {
+				hBytes, err := highlight.DownloadHighlight()
+
+				if err != nil {
+					log.Error().Err(err).Msg("Could not download highlight")
+					return
+				}
+	
+				notifiers.SendTelegramVideo(cfg, hBytes, generateHighlightMessage(cfg, &highlight, true))
+			}()
+		}	
+
 		cfg.KnownHighlightIds = append(cfg.KnownHighlightIds, highlight.Id)
 		cfg.SaveConfig(CONFIG_PATH)
-
-		notifiers.SendTelegramMessage(cfg, generateHighlightMessage(cfg, &highlight))
 	}
 
 }
