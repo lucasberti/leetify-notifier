@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	MAX_FILE_SIZE = 5 * 1024 * 1024
+	MAX_FILE_SIZE = 50 * 1024 * 1024
 )
 
 func SendTelegramMessage(cfg *config.Config, message string) error {
