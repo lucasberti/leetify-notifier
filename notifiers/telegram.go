@@ -63,10 +63,8 @@ func SendTelegramVideo(cfg *config.Config, video io.ReadCloser, size int64, capt
 	}
 
 	ms.WriteFields(data)
-
 	ms.WriteReader("video", "highlight.mp4", size, video)
 
-	log.Print(data)
 
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
