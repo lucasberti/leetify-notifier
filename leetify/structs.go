@@ -88,8 +88,8 @@ type Profile struct {
 	Meta       Meta        `json:"meta"`
 }
 
-func (p *Profile) GetLatestGame() *Game {
-	return &p.Games[0]
+func (p *Profile) GetThreeLastGames() []Game {
+	return p.Games[:3]
 }
 
 func (p *Profile) GetFriendsSteamIds() map[string]string {

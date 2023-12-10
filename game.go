@@ -22,8 +22,7 @@ func replaceGameValues(input string, mapName string, score string, link string) 
 	return input
 }
 
-func generateGameMessage(cfg *config.Config, profile *leetify.Profile) string {
-	game := profile.GetLatestGame()
+func generateGameMessage(cfg *config.Config, game *leetify.Game, profile *leetify.Profile) string {
 	friends := profile.Teammates
 
 	var message bytes.Buffer
@@ -74,17 +73,23 @@ func checkGames(cfg *config.Config, profile *leetify.Profile, wg *sync.WaitGroup
 	log.Print("Checking games...")
 	defer log.Print("Finished checking games")
 
-	latestGame := profile.GetLatestGame()
+	latestGames := profile.GetThreeLastGames()
 
-	if slices.Contains(cfg.KnownMatchIds, latestGame.GameId) {
+	if len(latestGames) == 0 {
 		return
 	}
 
-	if latestGame.GameId != "" {
-		cfg.KnownMatchIds = append(cfg.KnownMatchIds, latestGame.GameId)
-	}
-
-	cfg.SaveConfig(CONFIG_PATH)
-
-	notifiers.SendTelegramMessage(cfg, generateGameMessage(cfg, profile))
+	for _, game := range latestGames {
+		if slices.Contains(cfg.KnownMatchIds, game.GameId) {
+			return
+		}
+	
+		if game.GameId != "" {
+			cfg.KnownMatchIds = append(cfg.KnownMatchIds, game.GameId)
+		}
+	
+		cfg.SaveConfig(CONFIG_PATH)
+	
+		notifiers.SendTelegramMessage(cfg, generateGameMessage(cfg, &game, profile))
+	}	
 }
