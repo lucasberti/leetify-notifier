@@ -31,7 +31,7 @@ func replaceHighlightValues(input, player, description, link string, skipLink bo
 func generateHighlightMessage(cfg *config.Config, highlight *leetify.Highlight, skipLink bool) string {
 	var message bytes.Buffer
 
-	playerName := ""
+	playerName := highlight.Username
 	if mention, ok := cfg.TelegramUserNames[highlight.Steam64Id]; ok {
 		playerName = mention
 	}
